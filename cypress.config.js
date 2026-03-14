@@ -1,3 +1,4 @@
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 const fs = require('fs')
 const path = require('path')
 const { defineConfig } = require("cypress")
@@ -23,12 +24,12 @@ function waitForServerToStart(url) {
         },
         body: JSON.stringify(payload)
       }).then(response => {
-          if (response.status === 200) {
-            return resolve()
-          } else {
-            throw new Error(`Server responded with status ${response.status}`)
-          }
-        })
+        if (response.status === 200) {
+          return resolve()
+        } else {
+          throw new Error(`Server responded with status ${response.status}`)
+        }
+      })
         .catch(error => {
           if (Date.now() - startTime >= timeoutMinutes * 60 * 1000) {
             return reject(
@@ -48,9 +49,10 @@ function waitForServerToStart(url) {
 module.exports = defineConfig({
   viewportWidth: 1280,
   viewportHeight: 670,
+  chromeWebSecurity: false,
   e2e: {
     projectId: "q6gc25", // Cypress Cloud, needed for recording
-    baseUrl: 'http://localhost',
+    baseUrl: 'https://localhost',
     defaultCommandTimeout: 15000,
     taskTimeout: timeoutMinutes * 60 * 1000 + 10,
     downloadsFolder: 'cypress/downloads',
@@ -70,7 +72,7 @@ module.exports = defineConfig({
             .catch(error => {
               console.error('Failed to start server:')
               console.error(error.stack);
-              return reject(error);
+              throw error;
             })
         },
         removeSetupFile() {
